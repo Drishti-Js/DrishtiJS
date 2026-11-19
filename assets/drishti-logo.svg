@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="eyeStroke" x1="26" y1="120" x2="214" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10B7CC"/>
+      <stop offset="1" stop-color="#0F766E"/>
+    </linearGradient>
+    <radialGradient id="irisFill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 120) rotate(90) scale(54)">
+      <stop stop-color="#FFD063"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </radialGradient>
+    <radialGradient id="pupilFill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 120) rotate(90) scale(30)">
+      <stop stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#5B21B6"/>
+    </radialGradient>
+    <filter id="glow" x="0" y="0" width="240" height="240" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0.98 0 1 0 0 0.73 0 0 1 0 0.35 0 0 0 0.18 0" result="warm"/>
+      <feBlend in="SourceGraphic" in2="warm" mode="screen"/>
+    </filter>
+  </defs>
+  <circle cx="120" cy="90" r="34" fill="#FFD89A" opacity="0.25" filter="url(#glow)"/>
+  <path d="M40 120C61 93 89 77 120 77C151 77 179 93 200 120C179 147 151 163 120 163C89 163 61 147 40 120Z" stroke="url(#eyeStroke)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="120" cy="120" r="46" fill="url(#irisFill)"/>
+  <circle cx="120" cy="120" r="28" fill="url(#pupilFill)"/>
+  <path d="M120 44V72" stroke="#F59E0B" stroke-width="10" stroke-linecap="round"/>
+  <path d="M72 58L86 82" stroke="#FF4A3D" stroke-width="10" stroke-linecap="round"/>
+  <path d="M168 58L154 82" stroke="#FF4A3D" stroke-width="10" stroke-linecap="round"/>
+</svg>

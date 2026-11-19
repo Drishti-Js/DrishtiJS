@@ -1,5 +1,5 @@
 <p align="center">
-<img width="500" height="250" alt="Drishti Github Logo" src="https://github.com/user-attachments/assets/2c6e8084-52d2-4342-9d71-4983a22ca84b" />
+<img width="200" height="200" alt="Drishti JS logo" src="./assets/drishti-logo.svg" />
 </p>
 Drishti JS framework introduces a unified, modern way to build applications using <a href="https://bellard.org/quickjs/"> Quick JS</a> . It supports latest <a href="https://tc39.es/ecma262/"> ECMASCRIPT</a>
 
