@@ -40,7 +40,7 @@ def run(*argv, cwd=None):
     return result.stdout + result.stderr
 
 with tempfile.TemporaryDirectory(prefix='drishti-release-') as temporary:
-    stage = Path(temporary)
+    stage = Path(temporary).resolve()
     archive = directory / asset['filename']
     if archive.suffix == '.zip':
         with zipfile.ZipFile(archive) as bundle:
