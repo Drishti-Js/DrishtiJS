@@ -40,7 +40,8 @@ def run(*argv, cwd=None):
     return result.stdout + result.stderr
 
 with tempfile.TemporaryDirectory(prefix='drishti-release-') as temporary:
-    stage = Path(temporary).resolve()
+    stage = Path(temporary).resolve() / 'path with spaces'
+    stage.mkdir()
     archive = directory / asset['filename']
     if archive.suffix == '.zip':
         with zipfile.ZipFile(archive) as bundle:
@@ -67,4 +68,12 @@ with tempfile.TemporaryDirectory(prefix='drishti-release-') as temporary:
     script = stage / 'runtime-smoke.js'
     script.write_text('const result = 6 * 7; if (result !== 42) throw new Error("incorrect runtime result"); console.log("runtime smoke passed");\n')
     assert 'runtime smoke passed' in run(runtime, script, cwd=stage)
-    print(f'{args.platform}: native version/help, JavaScript/TypeScript/TSX app creation and build, and runtime execution passed', flush=True)
+    modules = stage / 'nested-modules'
+    (modules / 'lib').mkdir(parents=True)
+    (modules / 'value.js').write_text('export const value = 42;\n')
+    (modules / 'lib/dependency.js').write_text('import { value } from "../value.js"; export const result = value;\n')
+    entry = modules / 'main.js'
+    entry.write_text('import { result } from "./lib/dependency.js"; if (result !== 42) throw new Error("nested import failed"); console.log("nested imports passed");\n')
+    assert 'nested imports passed' in run(runtime, entry, cwd=stage)
+    assert 'nested imports passed' in run(cli, 'test', entry, cwd=stage)
+    print(f'{args.platform}: native version/help, JavaScript/TypeScript/TSX app creation and build, runtime execution, nested imports and spaced paths passed', flush=True)
