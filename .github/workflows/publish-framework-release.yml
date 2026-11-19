@@ -1,0 +1,82 @@
+name: Verify and publish framework installers
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'releases/**'
+      - 'scripts/verify-native-release.py'
+      - '.github/workflows/publish-framework-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: framework-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            platform: linux
+          - os: windows-latest
+            platform: windows
+          - os: macos-latest
+            platform: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify artifacts and run the actual framework binaries
+        run: python scripts/verify-native-release.py --platform ${{ matrix.platform }}
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/verify-native-release.py
+      - name: Publish verified release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python -c "import json; print(json.load(open('releases/latest.json'))['version'])")
+          tag="v${version}"
+          if gh release view "$tag" --json isDraft --jq .isDraft > existing-release.txt 2>/dev/null; then
+            if [ "$(cat existing-release.txt)" != true ]; then
+              echo "This version is already published; existing release assets will not be replaced."
+              exit 0
+            fi
+          else
+            gh release create "$tag" --target "$GITHUB_SHA" --draft --title "Drishti framework ${version}" --notes-file "releases/${version}/RELEASE-NOTES.md"
+          fi
+          python - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          m=json.loads(Path('releases/latest.json').read_text())
+          directory=Path(m['asset_directory']); tag='v'+m['version']
+          remote=json.loads(subprocess.check_output(['gh','api',f'repos/{os.environ["GH_REPO"]}/releases/tags/{tag}']))
+          present={a['name']:a for a in remote['assets']}
+          uploads=[directory/a['filename'] for a in m['assets']]+[directory/'SHA256SUMS',directory/'RELEASE-NOTES.md',Path('releases/latest.json')]
+          for path in uploads:
+              expected='sha256:'+hashlib.sha256(path.read_bytes()).hexdigest()
+              if path.name in present:
+                  assert present[path.name].get('digest')==expected, 'Refusing to replace a different existing release asset: '+path.name
+              else:
+                  subprocess.run(['gh','release','upload',tag,str(path)],check=True)
+          remote=json.loads(subprocess.check_output(['gh','api',f'repos/{os.environ["GH_REPO"]}/releases/tags/{tag}']))
+          present={a['name']:a for a in remote['assets']}
+          for path in uploads:
+              assert present[path.name].get('digest')=='sha256:'+hashlib.sha256(path.read_bytes()).hexdigest(), path.name
+          PY
+          gh release edit "$tag" --draft=false --latest
